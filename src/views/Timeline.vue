@@ -31,7 +31,7 @@ div
 
   div(v-if="buckets !== null")
     div(style="clear: both")
-    vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange")
+    vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange" v-on:update="this.getBuckets")
 
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")

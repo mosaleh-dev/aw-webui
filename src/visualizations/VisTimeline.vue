@@ -6,7 +6,7 @@ div
     i Buckets with no events in the queried range will be hidden.
 
   div(v-if="editingEvent")
-    EventEditor(:event="editingEvent" :bucket_id="editingEventBucket")
+    EventEditor(:event="editingEvent" :bucket_id="editingEventBucket" v-on:save="this.requestParentUpdate")
 </template>
 
 <style lang="scss">
@@ -70,6 +70,14 @@ export default {
           overflowMethod: 'cap',
           delay: 0,
         },
+        editable: true,
+        onAdd: (item, callback) => {
+          //TODO: open editor instead of using promt
+          this.onAdd(item, callback);
+          this.requestParentUpdate();
+        },
+        onMove: this.onMove,
+        onRemove: this.onRemove,
       },
       editingEvent: null,
       editingEventBucket: null,
@@ -161,7 +169,7 @@ export default {
       this.$bvModal.show('edit-modal-' + this.editingEvent.id);
     },
     onSelect: async function (properties) {
-      if (properties.items.length == 0) {
+      if (properties.items.length == 0 || this.items[properties.items[0]].group == 'aw-stopwatch') {
         return;
       } else if (properties.items.length == 1) {
         const event = this.chartData[properties.items[0]][6];
@@ -184,6 +192,54 @@ export default {
         alert('selected multiple items: ' + JSON.stringify(properties.items));
       }
     },
+    async onMove(event, callback) {
+      const eventId = event.eventObj.id;
+      const groupId = this.items[event.id].group;
+      const bucketId = _.find(this.groups, g => g.id == groupId).content;
+      // We retrieve the full event to ensure if's not cut-off by the query range
+      // See: https://github.com/ActivityWatch/aw-webui/pull/320#issuecomment-1056921587
+      const editingEvent = await this.$aw.getEvent(bucketId, eventId);
+      editingEvent.timestamp = event.start;
+      editingEvent.duration = (event.end - event.start) / 1000;
+      this.editingEvent = editingEvent;
+      this.editingEventBucket = bucketId;
+
+      //FIX:this should now if the edit is done currently if there is error the ui will still change also changes in editor is not reflected ex: if name changed
+      callback(event);
+      this.$nextTick(() => {
+        this.openEditor();
+      });
+    },
+    async onAdd(event, callback) {
+      if (event['group'] == 'aw-stopwatch') {
+        const label = prompt('name of the todo');
+        const awEvent = {
+          timestamp: event.start,
+          duration: (event.end - event.start) / 1000,
+          data: {
+            label: label,
+          },
+        };
+        //FIX:this should handle axception correctlly if the event havenot been added
+        await this.$aw.insertEvent(event.group, awEvent);
+        event.content = label;
+        callback(event);
+      }
+    },
+    async onRemove(event, callback) {
+      if (event['group'] == 'aw-stopwatch') {
+        const eventId = event.eventObj.id;
+        const groupId = this.items[event.id].group;
+        const bucketId = _.find(this.groups, g => g.id == groupId).content;
+        //FIX:this should now if the edit is done currently if there is error the ui will still change also changes in editor is not reflected ex: if name changed
+        await this.$aw.deleteEvent(bucketId, eventId);
+        callback(event);
+      }
+    },
+    requestParentUpdate() {
+      this.$emit('update');
+    },
+
     ensureUpdate() {
       // Will only run update() if data available and never ran before
       if (!this.updateHasRun) {
@@ -215,6 +271,16 @@ export default {
       const items = _.map(this.chartData, (row, i) => {
         const bgColor = row[5];
         const borderColor = Color(bgColor).darken(0.3);
+        const isEditable = row[0] == 'aw-stopwatch' ? true : false;
+        const editable = isEditable
+          ? {
+              add: true, // add new items by double tapping
+              updateTime: true, // drag items horizontally
+              updateGroup: false, // drag items from one group to another
+              remove: true, // delete an item by tapping the delete button top right
+              overrideItems: false,
+            }
+          : false;
         return {
           id: String(i),
           group: row[0],
@@ -223,6 +289,9 @@ export default {
           start: moment(row[3]),
           end: moment(row[4]),
           style: `background-color: ${bgColor}; border-color: ${borderColor}`,
+          selectable: true,
+          eventObj: row[6],
+          editable: editable,
         };
       });
 
@@ -245,6 +314,16 @@ export default {
             start: this.queriedInterval[0],
             end: this.queriedInterval[1],
             style: 'background-color: #aaa; height: 10px',
+            //to satisfy typescript
+            eventObj: 0,
+            selectable: true,
+            editable: {
+              add: true, // add new items by double tapping
+              updateTime: true, // drag items horizontally
+              updateGroup: false, // drag items from one group to another
+              remove: true, // delete an item by tapping the delete button top right
+              overrideItems: false, // allow these options to override item.editable
+            },
           });
         }
 

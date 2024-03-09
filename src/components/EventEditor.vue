@@ -121,7 +121,7 @@ export default {
     },
     async getEvent() {
       if (this.bucket_id && this.event && this.event.id) {
-        this.editedEvent = await this.$aw.getEvent(this.bucket_id, this.event.id);
+        this.editedEvent = this.event;
       } else {
         this.editedEvent = null;
       }
