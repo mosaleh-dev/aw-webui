@@ -7,17 +7,15 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-    name: Build (node-${{ matrix.node-version }})
+  build-webpack:
+    name: Build webpack (node-${{ matrix.node-version }})
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [16]
-        python-version: ['3.9']
+        node-version: [20]
         include:
-        - node-version: '16'
-          python-version: '3.9'
+        - node-version: '20'
 
     steps:
     - uses: actions/checkout@v4
@@ -30,11 +28,39 @@ jobs:
     - name: Install
       run: npm ci
     - name: Build
-      run: npm run build
+      run: make build
     - name: Upload build
       uses: actions/upload-artifact@v3.1.2
       with:
-        name: build
+        name: build-webpack
+        path: dist/*
+
+  build-vite:
+    name: Build vite (node-${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20]
+        include:
+        - node-version: '20'
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Install
+      run: npm ci
+    - name: Build
+      run: make build-vite
+    - name: Upload build
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: build-vite
         path: dist/*
 
   test:
@@ -44,12 +70,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [16]
+        node-version: [20]
         python-version: ['3.9']
         aw-server: ["aw-server", "aw-server-rust"]
-        aw-version: ["v0.12.3b11"]
+        aw-version: ["v0.12.3b18"]
         include:
-        - node-version: '16'
+        - node-version: '20'
           python-version: '3.9'
           aw-server: "aw-server-rust"
           aw-version: "master"
@@ -58,6 +84,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
+        fetch-depth: 0
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -119,7 +146,11 @@ jobs:
     - name: Run tests
       run: |
         npm test
-        bash <(curl -s https://codecov.io/bash)
+    - uses: codecov/codecov-action@v4
+      timeout-minutes: 2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
     - name: Serve webui
       run: |
           npm run serve &
@@ -141,9 +172,9 @@ jobs:
         mv screenshots/*.png screenshots/dist/$aw_server/$aw_version
     - name: Upload screenshots
       if: ${{ success() || steps.e2e.conclusion == 'failure'}}
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v4
       with:
-        name: screenshots
+        name: screenshots-${{ matrix.aw-server }}-${{ matrix.aw-version }}
         path: screenshots/dist/*
     - name: Print server logs to console
       if: ${{ always() }}

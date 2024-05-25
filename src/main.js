@@ -16,6 +16,7 @@ Vue.component('datetime', Datetime);
 // Load the Varela Round font
 import 'typeface-varela-round';
 
+// Load the main style
 import './style/style.scss';
 
 // Loads all the filters
@@ -28,7 +29,7 @@ import router from './route.js';
 import pinia from './stores';
 
 // Register Font Awesome icon component
-Vue.component('icon', () => import('vue-awesome/components/Icon'));
+Vue.component('icon', () => import('vue-awesome/components/Icon.vue'));
 
 // General components
 Vue.component('error-boundary', () => import('./components/ErrorBoundary.vue'));
@@ -62,7 +63,8 @@ Vue.component('aw-custom-vis', () => import('./visualizations/CustomVisualizatio
 Vue.component('aw-score', () => import('./visualizations/Score.vue'));
 
 // A mixin to make async method errors propagate
-Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
+import asyncErrorCapturedMixin from './mixins/asyncErrorCaptured.js';
+Vue.mixin(asyncErrorCapturedMixin);
 
 // Set the PRODUCTION constant
 // FIXME: Thould follow Vue convention and start with a $.
@@ -79,7 +81,7 @@ import { createClient, getClient, configureClient } from './util/awclient';
 createClient();
 
 // Setup Vue app
-import App from './App';
+import App from './App.vue';
 new Vue({
   el: '#app',
   router: router,

@@ -39,7 +39,7 @@ div
       b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
         | Save
 </template>
-<script>
+<script lang="ts">
 import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
@@ -122,11 +122,8 @@ export default {
     exportClasses: function () {
       console.log('Exporting categories...');
 
-      if (localStorage.classes === undefined) {
-        alert('No classes saved, nothing to export!');
-      }
       const export_data = {
-        categories: JSON.parse(localStorage.classes),
+        categories: this.categoryStore.classes,
       };
       // Pretty-format it for easier reading
       const text = JSON.stringify(export_data, null, 2);

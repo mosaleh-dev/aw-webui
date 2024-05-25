@@ -43,7 +43,7 @@ div
     div(v-if="words_by_duration.length == 0")
       | No words with significant duration. You're good to go!
     div(v-else)
-      div.row(v-for="word in words_by_duration")
+      div.row.category-builder-word(v-for="word in words_by_duration")
         div.col.hover-highlight
           div.d-flex.flex-row.py-2
             div.flex-grow-1
@@ -153,8 +153,8 @@ export default {
   computed: {
     ...mapState(useCategoryStore, ['allCategoriesSelect']),
     words_by_duration: function () {
-      const words: { [key: string]: { word: string; duration: number } } = this.words;
-      return Object.values(words)
+      const words: { word: string; duration: number }[] = [...this.words.values()];
+      return words
         .sort((a, b) => b.duration - a.duration)
         .filter(word => word.duration > 60)
         .filter(word => !this.ignored_words.includes(word.word));
@@ -220,22 +220,22 @@ export default {
       );
 
       const events = data[0];
-      const words = {};
+      const words = new Map<string, { word: string; duration: number; events: any[] }>();
       for (const event of events) {
         const words_in_event = event.data.title.split(/[\s\-,:()[\]/]/);
         for (const word of words_in_event) {
           if (word.length <= 2 || this.ignored_words.includes(word)) {
             continue;
           }
-          if (word in words) {
-            words[word].duration += event.duration;
-            words[word].events.push(event);
+          if (words.has(word)) {
+            words.get(word).duration += event.duration;
+            words.get(word).events.push(event);
           } else {
-            words[word] = {
+            words.set(word, {
               word: word,
               duration: event.duration,
               events: [event],
-            };
+            });
           }
         }
       }

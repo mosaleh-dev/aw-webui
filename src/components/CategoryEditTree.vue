@@ -31,7 +31,7 @@ div
     CategoryEditModal(:categoryId='editingId', @hidden="hideEditModal()")
 </template>
 
-<script>
+<script lang="ts">
 import 'vue-awesome/icons/regular/plus-square';
 import 'vue-awesome/icons/regular/minus-square';
 import 'vue-awesome/icons/circle';
@@ -97,6 +97,6 @@ export default {
 <style scoped lang="scss">
 .row.class:hover {
   background-color: #eee;
-  boder-radius: 5px;
+  border-radius: 5px;
 }
 </style>

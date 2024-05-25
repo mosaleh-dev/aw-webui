@@ -64,7 +64,7 @@ div
       aw-summary(:fields="activityStore.category.top",
                  :namefunc="e => e.data['$category'].join(' > ')",
                  :colorfunc="e => e.data['$category'].join(' > ')",
-                 :linkfunc="e => '#' + $route.path + '?category=' + e.data['$category'].join('>')",
+                 :linkfunc="e => '#' + $route.path + '?category=' + encodeURIComponent(e.data['$category'].join('>'))",
                  with_limit)
     div(v-if="type == 'category_tree'")
       aw-categorytree(:events="activityStore.category.top")
@@ -94,7 +94,7 @@ div
 }
 </style>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/times';

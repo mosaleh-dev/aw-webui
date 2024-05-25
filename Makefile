@@ -1,4 +1,4 @@
-.PHONY: install build dev test clean
+.PHONY: build dev test clean
 
 .FORCE: ;
 
@@ -11,21 +11,29 @@ else
 androidflag :=
 endif
 
-build: install static/logo.png static/logo.svg
+prebuild: node_modules/ static/logo.png static/logo.svg
+
+build: prebuild
 	npm run build ${androidflag}
+
+dev: prebuild
+	npm run serve ${androidflag}
+
+build-vite: prebuild
+	npx vite build
+
+dev-vite: prebuild
+	npx vite
 
 static/logo.%: media/logo/logo.%
 	@mkdir -p static
 	cp $< $@
 
-install:
+node_modules/: package-lock.json
 	npm ci
 
 uninstall:
 	rm -r node_modules/
-
-dev:
-	npm run serve ${androidflag}
 
 test:
 	npm test
