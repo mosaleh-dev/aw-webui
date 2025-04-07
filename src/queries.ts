@@ -220,16 +220,20 @@ const browser_appnames = {
     'Google-chrome',
     'chrome.exe',
     'google-chrome-stable',
+    'com.google.Chrome',
 
     // Chromium
     'Chromium',
     'Chromium-browser',
+    'chromium-browser',
     'Chromium-browser-chromium',
     'chromium.exe',
+    'org.chromium.Chromium',
 
     // Pre-releases
     'Google-chrome-beta',
     'Google-chrome-unstable',
+    'com.google.ChromeDev',
   ],
   firefox: [
     // Firefox
@@ -237,6 +241,7 @@ const browser_appnames = {
     'Firefox.exe',
     'firefox',
     'firefox.exe',
+    'org.mozilla.firefox',
 
     // Firefox Developer
     'Firefox Developer Edition',
@@ -258,15 +263,17 @@ const browser_appnames = {
     'librewolf',
     'librewolf.exe',
     'librewolf-default',
+    'io.gitlab.librewolf-community',
 
     // Waterfox
     'Waterfox',
     'Waterfox.exe',
     'waterfox',
     'waterfox.exe',
+    'net.waterfox.waterfox',
   ],
-  opera: ['opera.exe', 'Opera'],
-  brave: ['Brave-browser', 'Brave Browser', 'brave.exe'],
+  opera: ['opera.exe', 'Opera', 'com.opera.Opera'],
+  brave: ['Brave-browser', 'brave-browser', 'Brave Browser', 'brave.exe', 'com.brave.Browser'],
   edge: [
     'msedge.exe', // Windows
     'Microsoft Edge', // macOS
@@ -276,14 +283,17 @@ const browser_appnames = {
     'microsoft-edge', // linux
     'microsoft-edge-beta', // linux beta
     'microsoft-edge-dev', // linux dev
+    'com.microsoft.Edge',
+    'com.microsoft.EdgeDev',
   ],
   arc: [
     'Arc.exe', // Windows
     'Arc', // macOS
   ],
-  vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi'],
+  vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi', 'com.vivaldi.Vivaldi'],
   orion: ['Orion'],
-  yandex: ['Yandex'],
+  yandex: ['Yandex', 'ru.yandex.Browser'],
+  zen: ['Zen Browser', 'zen browser', 'zen.exe', 'app.zen_browser.zen'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
@@ -343,6 +353,9 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
     browser_domains = merge_events_by_keys(browser_events, ["$domain"]);
     browser_domains = sort_by_duration(browser_domains);
     browser_domains = limit_events(browser_domains, ${default_limit});
+    browser_titles = merge_events_by_keys(browser_events, ["title"]);
+    browser_titles = sort_by_duration(browser_titles);
+    browser_titles = limit_events(browser_titles, ${default_limit});
     browser_duration = sum_durations(browser_events);
 
     RETURN = {
@@ -356,6 +369,7 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
         "browser": {
             "domains": browser_domains,
             "urls": browser_urls,
+            "titles": browser_titles,
             "duration": browser_duration
         }
     };`
